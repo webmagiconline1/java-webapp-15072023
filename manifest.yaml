@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: my-app
-  namespace: NAMESPACE_PLACEHOLDER
+  namespace: NAMESPACE
   labels:
     app: my-app
 spec:
@@ -17,6 +17,20 @@ spec:
     spec:
       containers:
         - name: my-app-container
-          image: dab8106/NAMESPACE_PLACEHOLDER-javaweb:latest
+          image: dab8106/NAMESPACE-javaweb:latest
           ports:
             - containerPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-app-service
+  namespace: NAMESPACE
+spec:
+  selector:
+    app: my-app
+  type: LoadBalancer
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8080  # Assuming your application listens on port 8080

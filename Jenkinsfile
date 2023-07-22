@@ -1,40 +1,38 @@
 pipeline {
     agent any
 
-    environment {
-        // Set the PATH variable to include the location of Maven executable
-        PATH = "/opt/maven/bin:${env.PATH}"
+    parameters {
+        string(name: 'DOCKERHUB_CREDENTIALS', defaultValue: '', description: 'Docker Hub credentials ID')
     }
-    stages {
-// Junit testing the code
-        stage('Test') {
-            steps {
-                sh "mvn test"
-            }
-        }
 
-// Building the java application 
-        stage('Build App') {
+    stages {
+        stage('Build & Publish') {
             steps {
-                sh "mvn clean install package"
-            }
-        }
-// Build & Push Docker Image
-        stage('Publish') {
-            steps {
-                // Using the credential parameter in the `withCredentials` block
-                withCredentials([usernamePassword(credentialsId: "${params.DOCKERHUB_CREDENTIALS}", passwordVariable: 'DOCKER_PASSWORD', usernameVariable: 'DOCKER_USERNAME')]) {
-                    sh "docker build -t ${DOCKER_USERNAME}/javaweb:16072023 ."
-                    sh "docker login -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD}"
-                    sh "docker push ${DOCKER_USERNAME}/javaweb:16072023"
+                script {
+                    // Get the current Git branch name
+                    def branchName = env.BRANCH_NAME
+
+                    // Construct the Docker image name based on the branch name
+                    def dockerImageName = "dab8106/${branchName}-javaweb:latest"
+
+                    // Using the global credentials directly in the `withCredentials` block
+                    withCredentials([usernamePassword(credentialsId: 'DOCKERHUB_CREDENTIALS', passwordVariable: 'DOCKER_PASSWORD', usernameVariable: 'DOCKER_USERNAME')]) {
+                        sh "docker build -t ${dockerImageName} ."
+                        sh "docker login -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD}"
+                        sh "docker push ${dockerImageName}"
+                    }
                 }
             }
         }
-        stage('Deploy to ACI') {
+
+        stage('Deploy to Kubernetes') {
             steps {
-                sh 'az login --service-principal -u <service_principal_id> -p "<service_principal_secret>" --tenant <azure_tenant_id>'
-                sh 'az container create --resource-group ${RG_NON_PROD} --file aci.yaml'
+                script {
+                    def NAMESPACE = env.BRANCH_NAME
+                    sh "kubectl config set-context --current --namespace=${NAMESPACE}"
+                    sh "kubectl apply -f manifest.yaml"
+                }
             }
         }
-  }
+    }
 }

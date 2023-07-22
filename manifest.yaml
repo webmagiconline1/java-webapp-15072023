@@ -2,7 +2,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: my-app
-  namespace: NAMESPACE
   labels:
     app: my-app
 spec:
@@ -17,7 +16,7 @@ spec:
     spec:
       containers:
         - name: my-app-container
-          image: dab8106/NAMESPACE-javaweb:latest
+          image: dab8106/development-javaweb:latest
           ports:
             - containerPort: 8080
 ---
@@ -25,7 +24,6 @@ apiVersion: v1
 kind: Service
 metadata:
   name: my-app-service
-  namespace: NAMESPACE
 spec:
   selector:
     app: my-app

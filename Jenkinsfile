@@ -27,8 +27,8 @@ pipeline {
 
         stage('Deploy to Kubernetes') {
             steps {
-                def NAMESPACE = env.BRANCH_NAME
                 script {
+                    def NAMESPACE = env.BRANCH_NAME
                     sh "cat manifest.yaml | NAMESPACE=${params.NAMESPACE} envsubst | kubectl apply -f -"
                 }
             }

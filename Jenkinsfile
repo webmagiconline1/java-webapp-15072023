@@ -24,5 +24,14 @@ pipeline {
                 }
             }
         }
+
+        stage('Deploy to Kubernetes') {
+            steps {
+                def NAMESPACE = env.BRANCH_NAME
+                script {
+                    sh "cat manifest.yaml | NAMESPACE=${params.NAMESPACE} envsubst | kubectl apply -f -"
+                }
+            }
+        }
     }
 }

@@ -29,7 +29,8 @@ pipeline {
             steps {
                 script {
                     def NAMESPACE = env.BRANCH_NAME
-                    sh "cat manifest.yaml | NAMESPACE=${params.NAMESPACE} envsubst | kubectl apply -f -"
+                    sh "kubectl config set-context --current --namespace=${NAMESPACE}"
+                    sh "kubectl apply -f manifest.yaml"
                 }
             }
         }
